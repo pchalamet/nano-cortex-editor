@@ -43,6 +43,7 @@ run gate             mock.js test-gate.js
 run dropdown         mock.js test-dropdown.js
 run menu             mock.js test-menu.js
 run trackpad         mock.js test-trackpad.js
+run modal-scroll     mock.js test-modal-scroll.js
 page dialogs mock.js library.js check-dialogs.js
 for size in 1440,900 1000,517 760,447; do
   result="$(title dialogs "$size")"

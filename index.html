@@ -426,6 +426,15 @@
     .tuner-btn .fx-icon { --block-color: #45F862; width: 22px; height: 22px; border-radius: 5px; }
     .tuner-btn .fx-icon::after { inset: 3px; }
 
+    /* Lock the page for any visible modal, including dynamically created and stacked dialogs.
+       Overlays embedded in Duo's live stage are not modals. */
+    html:has(body > :is(.ask-overlay, .lib-overlay, .tuner-overlay, .wheel-overlay):not([hidden])),
+    body:has(> :is(.ask-overlay, .lib-overlay, .tuner-overlay, .wheel-overlay):not([hidden])) {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    :is(.ask-overlay, .lib-overlay, .tuner-overlay, .wheel-overlay) { overscroll-behavior: contain; }
+
     .tuner-overlay {
       position: fixed;
       inset: 0;
