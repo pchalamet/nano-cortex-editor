@@ -35,7 +35,7 @@
       margin: 0;
       font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", sans-serif;
       font-variant-numeric: tabular-nums;
-      background: radial-gradient(circle at top, #161616 0%, #000000 60%);
+      background: #080909;
       color: var(--text);
     }
 
@@ -1520,6 +1520,13 @@
     .signal-chain { --sc-top: 16px; --sc-tile-size: 60px; position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
                     padding: var(--sc-top) 20px 4px; border: 1px solid var(--border); border-radius: 14px; overflow-x: auto;
                     background: linear-gradient(180deg, rgba(20, 22, 24, .95), rgba(10, 11, 12, .95)); }
+    /* Keep the overview in place while the controls below scroll; the toolbar may wrap. */
+    @media (min-width: 601px) {
+      html:not([data-duo]) #signalChain { position: sticky; top: calc(var(--toolbar-height, 70px) + 18px); z-index: 5; margin-inline: -10px;
+        background: linear-gradient(180deg, rgba(20, 22, 24, .96), rgba(10, 11, 12, .94));
+        backdrop-filter: blur(16px) saturate(1.1); -webkit-backdrop-filter: blur(16px) saturate(1.1);
+        box-shadow: 0 16px 32px -8px rgba(0, 0, 0, .85), 0 3px 8px rgba(0, 0, 0, .5); }
+    }
     .sc-node { position: relative; z-index: 1; display: grid; justify-items: center; gap: 6px; flex: 0 0 88px; cursor: pointer; user-select: none; }
     .sc-node.wide { flex: 0 1 170px; min-width: 128px; }
     .signal-chain::before { content: ""; position: absolute; top: calc(var(--sc-top) + var(--sc-tile-size) / 2 - 1px); left: 42px; right: 42px; height: 2px; background: #2c3136; }
@@ -1686,7 +1693,7 @@
     .chain { gap: 14px; }
     /* Horizontal scrolling also clips vertically. Reserve space for the flash halo,
        then cancel that space in layout so the cards stay in place. */
-    html:not([data-duo]) .chain { padding: 48px var(--page-gutter) 52px; margin: -48px calc(-1 * var(--page-gutter)); pointer-events: none; }
+    html:not([data-duo]) .chain { padding: 48px var(--page-gutter) 20px; margin: -48px calc(-1 * var(--page-gutter)); pointer-events: none; }
     html:not([data-duo]) .chain > .block { pointer-events: auto; }
     .block { position: relative; overflow: hidden; min-height: 0; padding: 14px 16px 18px; border-radius: 14px; }
     /* small pedal picture left of the model choice: only with own pictures (img/), see .pedal-pictures */
@@ -16747,6 +16754,15 @@ function parseSelectedCaptureState(payload) {
       $('jamPick').setAttribute('aria-label', 'Choose tracks');
     }
     duoUpdateLayout();   // (the posture may already be known)
+
+    const toolbar = document.querySelector('header.topbar');
+    const updatePinnedLayout = () => {
+      document.documentElement.style.setProperty('--toolbar-height', toolbar.getBoundingClientRect().height + 'px');
+    };
+    const pinnedLayoutObserver = new ResizeObserver(updatePinnedLayout);
+    pinnedLayoutObserver.observe(toolbar);
+    updatePinnedLayout();
+    window.addEventListener('resize', updatePinnedLayout);
 
     $('heroConnect').addEventListener('click', () => $('connectBtn').click());
     setStatus('Disconnected');
