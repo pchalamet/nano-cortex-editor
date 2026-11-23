@@ -1576,8 +1576,8 @@
       100% { box-shadow: 0 0 0 0 transparent, 0 0 0 0 transparent, inset 0 0 0 transparent; }
     }
 
-    /* top row: capture + amp, cab, gate */
-    .top-row { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1.15fr) 178px; gap: 16px; }
+    /* top row: gate, capture + amp, cab */
+    .top-row { grid-template-columns: 178px minmax(0, 1.5fr) minmax(0, 1.15fr); gap: 16px; }
     /* Use the same overlapping highlight as the FX cards, with a tighter white glow. */
     .top-card { position: relative; --flash-blur: 24px; --flash-spread: 2px; --flash-opacity: 40%;
       --flash-inner-blur: 18px; --flash-inner-opacity: 18%; min-height: 0; padding: 12px 14px 14px; border-radius: 14px; }
@@ -2422,6 +2422,16 @@
     <section id="signalChain" class="signal-chain" aria-label="Signal chain" title="Click: highlight the block - double-click: switch it on / off"></section>
 
     <section class="top-row">
+      <div class="top-card gate-card" id="gateCard" style="--block-color: var(--white);">
+        <div class="block-head">
+          <div class="block-title"><span class="fx-icon" style="--icon: var(--ico-gate)"></span><h2>Gate</h2></div>
+          <div id="gateToggle" class="toggle-switch" data-midi-id="toggle::gate" data-midi-target='{"kind":"toggle","target":"gate"}'>
+            <div class="toggle-dot"></div>
+          </div>
+        </div>
+        <div id="gateParams"></div>
+      </div>
+
       <div class="top-card capture-card" id="captureCard" style="--block-color: var(--white);">
         <div class="block-head">
           <div class="block-title"><span id="captureIcon" class="fx-icon" style="--icon: var(--ico-capture)"></span><h2>Capture</h2><span id="captureType" class="cap-type"></span></div>
@@ -2461,15 +2471,6 @@
         </div>
       </div>
 
-      <div class="top-card gate-card" id="gateCard" style="--block-color: var(--white);">
-        <div class="block-head">
-          <div class="block-title"><span class="fx-icon" style="--icon: var(--ico-gate)"></span><h2>Gate</h2></div>
-          <div id="gateToggle" class="toggle-switch" data-midi-id="toggle::gate" data-midi-target='{"kind":"toggle","target":"gate"}'>
-            <div class="toggle-dot"></div>
-          </div>
-        </div>
-        <div id="gateParams"></div>
-      </div>
     </section>
 
     <section class="chain" id="chain"></section>
