@@ -340,18 +340,6 @@
       min-height: 12px;
     }
 
-    .beta-footer {
-      border-top: 1px solid #24272a;
-      padding: 14px 4px 2px;
-      color: #8f8f8f;
-      font-size: 11px;
-      line-height: 1.5;
-      letter-spacing: 0.04em;
-      text-align: center;
-    }
-
-    .beta-footer strong { color: #cfcfcf; font-weight: 650; }
-
     /* Block icons: own line drawings (tools/icons.py), used as CSS masks tinted with --block-color. */
     :root {
       --ico-overdrive: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M2 12h3l2-6h5l2 6h0l2 6h5l2-6'/></g></svg>");
@@ -711,7 +699,7 @@
        Overview first: every block is in sight and one tap away; nothing scrolls that does not have to. */
     #duoStage, #duoList, #duoFooter, .duo-only { display: none; }
     html[data-duo] body { overscroll-behavior: none; }
-    html[data-duo] .beta-footer, html[data-duo] header.topbar .brand, html[data-duo] #renameBtn, html[data-duo] #expBtn,
+    html[data-duo] header.topbar .brand, html[data-duo] #renameBtn, html[data-duo] #expBtn,
     html[data-duo] #fsBtn, html[data-duo] #midiBtn, html[data-duo] .tool-sep, html[data-duo] #syncLine { display: none; }
     html[data-duo] .more-menu .duo-only { display: flex; }
     /* (the cards are fixed in place - the page itself may be empty, so it keeps its dark ground on its own) */
@@ -1080,7 +1068,6 @@
 
     /* ---- views (html.view-pedals, html.view-mini): the chain as a pedalboard, or a small window - both show the
        block chosen in the chain (click) with its controls in a row; a double-click switches a block ---- */
-    html:is(.view-pedals, .view-mini) :is(.beta-footer) { display: none; }
     html:is(.view-pedals, .view-mini) .top-row { display: block; }
     html:is(.view-pedals, .view-mini) :is(.top-row, #chain) > :not(.view-focus) { display: none; }
     html:is(.view-pedals, .view-mini) .top-row:not(:has(> .view-focus)) { display: none; }
@@ -2450,11 +2437,6 @@
     <section class="chain" id="chain"></section>
     <section id="fsStrip" class="fs-strip" hidden aria-label="Footswitches of the controller"></section>
 
-    <footer class="beta-footer">
-      <strong>Nano Cortex Web Editor</strong><br>
-      Tested firmware: 2.2.1 &nbsp;|&nbsp; Unofficial community project &nbsp;|&nbsp; Not affiliated with Neural DSP<br>
-      Use at your own risk. Back up presets in Cortex Cloud before testing.
-    </footer>
   </main>
 
   <div id="askOverlay" class="ask-overlay" hidden>
