@@ -2627,7 +2627,7 @@
         </div>
       </div>
       <div class="eq-note">
-        <span>Drag a point · scroll over it: Q or slope · double-click: band on / off, fader to 0 · Shift: slowly. The curve is drawn with textbook filters – near the Nano's, not measured.</span>
+        <span>Drag a point · double-click: band on / off, fader to 0 · Shift: slowly. The curve is drawn with textbook filters – near the Nano's, not measured.</span>
         <span id="eqSpecLabel" class="eq-label" title="The spectrum of the Nano's sound behind the curve: what comes out of the Nano over USB (channels 3/4), after all its effects. Its scale is its own, not the curve's dB.">Spectrum</span>
         <div id="eqSpecToggle" class="toggle-switch" style="--block-color: #f2f2f2" role="switch" aria-label="Spectrum behind the curve"><div class="toggle-dot"></div></div>
         <span class="eq-label" title="How a frequency control's travel becomes Hz is not checked against the Nano yet. Compare a value with the Cortex Cloud app and choose what fits.">Frequency scale</span>
@@ -7474,10 +7474,10 @@ function parseSelectedCaptureState(payload) {
         '<div class="mt-tools"><span class="mt-seg" id="mtScope" role="group" aria-label="Tempo for"><button data-v="1" title="One tempo for all presets">Global</button>' +
         '<button data-v="0" title="Each preset keeps its own tempo (saved with the preset)">Preset</button></span>' +
         '<button id="mtClose" class="dlg-close" title="Close (Esc)" aria-label="Close"><span class="ico" style="--icon: var(--ico-close)"></span></button></div></div>' +
-        '<div class="mt-body"><div><div class="mt-dial" id="mtDial" tabindex="0" title="Drag up / down or scroll; arrow keys: 1 BPM, with Shift 0.1">' +
+        '<div class="mt-body"><div><div class="mt-dial" id="mtDial" tabindex="0" title="Drag up / down; arrow keys: 1 BPM, with Shift 0.1">' +
         '<svg viewBox="0 0 300 300"><path id="mtTrack" stroke="#1d2024" stroke-width="10" fill="none" stroke-linecap="round"/>' +
         '<path id="mtArc" stroke="#45F862" stroke-width="10" fill="none" stroke-linecap="round"/></svg>' +
-        '<div class="c"><input id="mtBpm" type="text" inputmode="decimal" aria-label="Tempo (BPM)"><small>BPM · DRAG OR SCROLL</small><span id="mtBeats"></span></div></div>' +
+        '<div class="c"><input id="mtBpm" type="text" inputmode="decimal" aria-label="Tempo (BPM)"><small>BPM · DRAG</small><span id="mtBeats"></span></div></div>' +
         '<button class="mt-tap" id="mtTap" title="Tap the tempo (T)">TAP</button></div>' +
         '<div class="mt-side"><div class="row"><div class="row line"><span class="mt-q">Metronome</span>' +
         '<div id="mtOn" class="toggle-switch" role="switch" aria-label="Metronome" style="--block-color:#45F862"><div class="toggle-dot"></div></div></div>' +
@@ -7500,7 +7500,7 @@ function parseSelectedCaptureState(payload) {
       const bpmInput = overlay.querySelector('#mtBpm');
       bpmInput.addEventListener('change', () => { const v = parseFloat(bpmInput.value.replace(',', '.')); if (Number.isFinite(v)) setTempo(v); else metroRefresh(); });
       bpmInput.addEventListener('keydown', e => { if (e.key === 'Enter') bpmInput.blur(); e.stopPropagation(); });
-      // the dial: drag up / down (1 BPM per 4 px), the wheel, the arrow keys
+      // the dial: drag up / down (1 BPM per 4 px), or use the arrow keys
       const dial = overlay.querySelector('#mtDial');
       dial.addEventListener('pointerdown', e => {
         if (e.target === bpmInput) return;
@@ -7512,7 +7512,7 @@ function parseSelectedCaptureState(payload) {
         dial.addEventListener('pointerup', up);
         dial.addEventListener('pointercancel', up);
       });
-      dial.addEventListener('wheel', e => { e.preventDefault(); setTempo(metro.tempo + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 0.1 : 1)); }, { passive: false });
+
       dial.addEventListener('keydown', e => {
         const d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key];
         if (d) { e.preventDefault(); setTempo(metro.tempo + d * (e.shiftKey ? 0.1 : 1)); }
@@ -7547,6 +7547,7 @@ function parseSelectedCaptureState(payload) {
         vol.addEventListener('pointerup', up);
         vol.addEventListener('pointercancel', up);
       });
+
       vol.addEventListener('keydown', e => {
         const d = { ArrowUp: 0.5, ArrowRight: 0.5, ArrowDown: -0.5, ArrowLeft: -0.5 }[e.key];
         if (d) { e.preventDefault(); set(() => { metro.settings.volume = clamp(metro.settings.volume + d, METRO_VOL[0], METRO_VOL[1]); }, false); }
@@ -8681,7 +8682,7 @@ function parseSelectedCaptureState(payload) {
       return readableValue(value, 'Hz', 0);
     }
 
-    // Cab level / high pass / low pass as cream knobs like on the amp: drag, scroll, or click the value to type it.
+    // Cab level / high pass / low pass as cream knobs like on the amp: drag, or click the value to type it.
     function renderCabKnob(label, key, value, onChange) {
       const [min, max, step] = CAB_RANGES[key];
       const p = document.createElement('div');
@@ -8691,7 +8692,7 @@ function parseSelectedCaptureState(payload) {
       knobEl.className = 'knob';
       knobEl.id = 'cab-' + key;
       tagMidi(knobEl, { kind: 'cab', key });
-      knobEl.title = 'Drag for coarse adjustment, scroll for fine adjustment';
+      knobEl.title = 'Drag to adjust; click the value to type it';
       const valueEl = document.createElement('div');
       valueEl.className = 'value-text';
       p.appendChild(knobEl);
@@ -8706,8 +8707,7 @@ function parseSelectedCaptureState(payload) {
         show();
         onChange(v);
       };
-      const fine = (max - min) / 200;
-      knobEl.addEventListener('wheel', e => { e.preventDefault(); apply(current + (e.deltaY < 0 ? fine : -fine)); }, { passive: false });
+
       knobEl.addEventListener('pointerdown', e => {
         e.preventDefault();
         const drag = knobDrag(e), start = current;
@@ -8862,7 +8862,7 @@ function parseSelectedCaptureState(payload) {
 
       knobEl.style.setProperty('--pct', pct + '%');
       knobEl.style.setProperty('--angle', angle + 'deg');
-      knobEl.title = disabled ? 'Locked by Sync setting' : 'Drag for coarse adjustment, scroll for fine adjustment';
+      knobEl.title = disabled ? 'Locked by Sync setting' : 'Drag to adjust; click the value to type it';
 
       const value = document.createElement('div');
       value.className = 'value-text';
@@ -8878,12 +8878,6 @@ function parseSelectedCaptureState(payload) {
         if (canSend) sendParamValue(blockKey, param);
       };
 
-      knobEl.addEventListener('wheel', e => {
-        e.preventDefault();
-        if (disabled) return;
-        const delta = e.deltaY < 0 ? (meta.step || 0.1) : -(meta.step || 0.1);
-        applyValue(Number(param.value) + delta);
-      }, { passive: false });
 
       knobEl.addEventListener('pointerdown', e => {
         if (disabled) return;
@@ -9000,7 +8994,7 @@ function parseSelectedCaptureState(payload) {
       knobEl.className = 'knob volume';
       knobEl.id = 'captureVolumeKnob';
       tagMidi(knobEl, { kind: 'captureVolume' });
-      knobEl.title = 'Capture volume - drag or scroll';
+      knobEl.title = 'Capture volume - drag to adjust';
       const value = document.createElement('div');
       value.className = 'value-text';
       value.id = 'captureVolumeKnobValue';
@@ -9013,7 +9007,7 @@ function parseSelectedCaptureState(payload) {
         setCaptureVolumeUI(v);
         setCaptureVolumeDb(v);
       };
-      knobEl.addEventListener('wheel', e => { e.preventDefault(); apply(db() + (e.deltaY < 0 ? 0.5 : -0.5)); }, { passive: false });
+
       knobEl.addEventListener('pointerdown', e => {
         e.preventDefault();
         const drag = knobDrag(e), start = db();
@@ -9056,7 +9050,7 @@ function parseSelectedCaptureState(payload) {
 
       knobEl.style.setProperty('--pct', pct + '%');
       knobEl.style.setProperty('--angle', angle + 'deg');
-      knobEl.title = 'Drag for coarse adjustment, scroll for fine adjustment';
+      knobEl.title = 'Drag to adjust; click the value to type it';
       // Level is the Nano's LEVEL knob: the master output volume of the device. It is not part of the preset - the
       // Nano does not mark the preset as changed and Save does not store it.
       if (key === 'level') {
@@ -9087,10 +9081,6 @@ function parseSelectedCaptureState(payload) {
         }
       };
 
-      knobEl.addEventListener('wheel', e => {
-        e.preventDefault();
-        applyRaw(state.amp[key] + (e.deltaY < 0 ? 3 : -3));
-      }, { passive: false });
 
       knobEl.addEventListener('pointerdown', e => {
         e.preventDefault();
@@ -15977,21 +15967,7 @@ function parseSelectedCaptureState(payload) {
           redraw();
           onChange && onChange(eq);
         });
-        // the wheel over a point: its Q (or the slope of a cut)
-        let wheelDone = null;
-        canvas.addEventListener('wheel', e => {
-          if (!eq) return;
-          const b = hit(e) || (view.big && eq.bands.find(x => x.id === view.selected && (x.hasQ || x.hasSlope)));
-          if (!b || !(b.hasQ || b.hasSlope)) return;
-          e.preventDefault();
-          view.selected = b.id;
-          if (b.hasQ) setBand(key, eq, b, { q: b.q * Math.pow(1.08, e.deltaY < 0 ? 1 : -1) });
-          else if (Math.abs(e.deltaY) > 8) setBand(key, eq, b, { order: b.order + (e.deltaY < 0 ? 1 : -1) });
-          redraw();
-          onChange && onChange(eq);
-          clearTimeout(wheelDone);
-          wheelDone = setTimeout(() => onDone && onDone(), 500);
-        }, { passive: false });
+
         // double click: a band on / off (Parametric 3), a fader back to 0 dB (Graphic 9)
         canvas.addEventListener('dblclick', e => {
           eq = current();

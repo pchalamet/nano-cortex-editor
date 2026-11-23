@@ -19,11 +19,11 @@ setTimeout(async () => {
     $('mtOn').click(); await wait(20);
     const g = sent.pop();
     ok('metronome on frame has 40 00', g && hx(g.bytes).includes('40 00 48 02'));
-    // tempo by wheel (debounced)
-    $('mtDial').dispatchEvent(new WheelEvent('wheel', { deltaY: -100, bubbles: true, cancelable: true }));
+    // tempo by arrow key (debounced)
+    $('mtDial').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
     await wait(200);
     const h = sent.pop();
-    ok('wheel -> 121: ' + (h && h.label), h && /Tempo 121.0 BPM/.test(h.label));
+    ok('arrow key -> 121: ' + (h && h.label), h && /Tempo 121.0 BPM/.test(h.label));
     // tap: 500 ms apart -> 120
     const tapBtn = $('mtTap');
     for (let i = 0; i < 4; i++) { tapBtn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); await wait(500); }
