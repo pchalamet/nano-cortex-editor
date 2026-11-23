@@ -1029,11 +1029,12 @@
        the whole preset fits a 1440 x 900 window - a compact chain and cards, a block with nine or more controls takes
        two columns with its sliders in two columns ---- */
     html.bars main { gap: 12px; }
-    html.bars .signal-chain { padding: 10px 20px 8px; }
+    html.bars .signal-chain { --sc-tile-size: 46px; padding: var(--sc-top) 20px 0; }
     html.bars .sc-node { gap: 4px; }
     html.bars .sc-tile { width: 46px; height: 46px; border-radius: 12px; }
     html.bars .sc-tile .ico { width: 22px; height: 22px; }
-    html.bars .sc-tile.io { margin-top: 4px; }
+    html.bars .sc-tile.io { margin-top: 0; }
+    html.bars .sc-tile.io.tempo { width: 60px; height: var(--sc-tile-size); margin-top: 0; }
     html.bars .sc-tile.io.meter { height: 46px; padding: 6px 0; }
     html.bars .sc-node.wide .sc-tile { height: 46px; }
     html.bars .top-row > * { padding-top: 10px; padding-bottom: 10px; }
@@ -1516,12 +1517,12 @@
     main { --page-gutter: 24px; padding: 18px var(--page-gutter) 24px; gap: 16px; }
 
     /* signal chain, Neural style: filled = on, outline = off, dashed = empty */
-    .signal-chain { position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
-                    padding: 16px 20px 12px; border: 1px solid var(--border); border-radius: 14px; overflow-x: auto;
+    .signal-chain { --sc-top: 16px; --sc-tile-size: 60px; position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: 6px;
+                    padding: var(--sc-top) 20px 4px; border: 1px solid var(--border); border-radius: 14px; overflow-x: auto;
                     background: linear-gradient(180deg, rgba(20, 22, 24, .95), rgba(10, 11, 12, .95)); }
     .sc-node { position: relative; z-index: 1; display: grid; justify-items: center; gap: 6px; flex: 0 0 88px; cursor: pointer; user-select: none; }
     .sc-node.wide { flex: 0 1 170px; min-width: 128px; }
-    .signal-chain::before { content: ""; position: absolute; top: 45px; left: 42px; right: 42px; height: 2px; background: #2c3136; }
+    .signal-chain::before { content: ""; position: absolute; top: calc(var(--sc-top) + var(--sc-tile-size) / 2 - 1px); left: 42px; right: 42px; height: 2px; background: #2c3136; }
     .sc-tile { width: 60px; height: 60px; border-radius: 14px; display: grid; place-items: center; position: relative;
                background: #15181b; border: 1.5px solid #3a3f45; color: #9aa0a6; transition: transform .12s, box-shadow .12s; }
     .sc-node:hover .sc-tile { transform: translateY(-2px); }
@@ -2024,8 +2025,8 @@
     .sc-node.io.level:hover .sc-tile { color: #fff; border-color: var(--accent); }
     /* tempo + metronome (NanOS 2.3.0): a tile before the meter, a dialog */
     .sc-tile.io.tempo { width: 60px; height: 60px; margin-top: 0; border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 6px;
-      border: 1px solid #2c3036; background: transparent; color: #f2f2f2; cursor: pointer; }
-    .sc-tile.io.tempo.on { border-color: #45F862; background: color-mix(in srgb, #45F862 16%, #0b0c0d); }
+      border: 1px solid #2c3036; background: #15181b; color: #f2f2f2; cursor: pointer; }
+    .sc-tile.io.tempo.on { border-color: #45F862; background: color-mix(in srgb, #45F862 16%, #15181b); }
     .sc-tile.io.tempo b { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: 0; }
     .mt-beats { display: flex; gap: 6px; align-items: center; }
     .mt-beats i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #45494f; flex: none; }
