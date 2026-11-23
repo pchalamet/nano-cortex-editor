@@ -2281,6 +2281,36 @@
     .cw-done { text-align: center; padding: 22px 0 8px; }
     .cw-done .cw-check { width: 70px; height: 70px; border-radius: 50%; background: #45F862; color: #0d0f11; display: inline-grid; place-items: center; font-size: 38px; font-weight: 800; }
     .cw-done h3 { margin: 14px 0 6px; font-size: 22px; }
+
+    /* HTML dropdowns share the editor palette, including their scrollbars. */
+    select {
+      appearance: none;
+      padding-right: 30px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='m2 2 4 4 4-4' fill='none' stroke='%23aaa' stroke-width='1.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      cursor: pointer;
+    }
+    select:disabled { cursor: default; }
+    .html-select-backdrop { position: fixed; inset: 0; z-index: 99999; -webkit-app-region: no-drag; }
+    .html-select-backdrop[hidden] { display: none; }
+    .html-select-menu {
+      -webkit-app-region: no-drag;
+      position: fixed; inset: auto; margin: 0; padding: 5px;
+      z-index: 100000; overflow: auto; overscroll-behavior: contain;
+      color-scheme: dark; color: var(--text); background: #141618;
+      border: 1px solid #404448; border-radius: 9px;
+      box-shadow: 0 12px 32px #000a;
+      font: 14px/1.4 "IBM Plex Sans", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      scrollbar-width: thin; scrollbar-color: #555 #141618;
+    }
+    .html-select-menu[hidden] { display: none; }
+    .html-select-option { position: relative; padding: 8px 28px 8px 10px; border-radius: 5px; cursor: pointer; overflow-wrap: anywhere; }
+    .html-select-option.active { background: #303438; outline: 1px solid #50565b; outline-offset: -1px; }
+    .html-select-option[aria-selected="true"] { color: #fff; font-weight: 600; }
+    .html-select-option[aria-selected="true"]::after { content: '✓'; position: absolute; right: 9px; }
+    .html-select-option[aria-disabled="true"] { color: #72777c; cursor: default; }
+    .html-select-group { padding: 9px 10px 4px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; }
   </style>
 </head>
 <body>
@@ -16717,6 +16747,206 @@ function parseSelectedCaptureState(payload) {
     render();
     log('Prototype loaded.');
     log('Protocol mode: manual sync + protobuf FE metadata parser + current-state UI update + typed parameter UI');
+  </script>
+  <script>
+    // Shared HTML listbox for every select, including controls created during render().
+    // Keep the select as the value/focus owner so existing labels, MIDI tags and change handlers still work.
+    (() => {
+      // Catch outside clicks even over Electron's draggable title bar.
+      const backdrop = document.createElement('div');
+      backdrop.className = 'html-select-backdrop';
+      backdrop.hidden = true;
+      backdrop.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(backdrop);
+      const menu = document.createElement('div');
+      menu.id = 'htmlSelectMenu';
+      menu.className = 'html-select-menu';
+      menu.setAttribute('role', 'listbox');
+      menu.hidden = true;
+      document.body.appendChild(menu);
+      let owner = null, active = -1, items = [], search = '', searchAt = 0;
+      const enabled = option => !option.disabled && !option.closest('optgroup[disabled]') && !option.hidden && !option.closest('optgroup[hidden]');
+      const selectAt = target => target instanceof Element ? target.closest('select:not([multiple])') : null;
+      const observer = new MutationObserver(records => {
+        if (!owner) return;
+        if (!owner.isConnected || owner.disabled || !owner.getClientRects().length || owner.closest('[hidden]')) close();
+        else if (records.some(record => owner.contains(record.target))) build();
+      });
+      function close() {
+        if (!owner) return;
+        observer.disconnect();
+        owner.setAttribute('aria-expanded', 'false');
+        owner.removeAttribute('aria-controls');
+        owner.removeAttribute('aria-activedescendant');
+        menu.hidden = true;
+        backdrop.hidden = true;
+        owner = null;
+        items = [];
+      }
+      function highlight(index) {
+        active = index;
+        items.forEach((item, i) => item.classList.toggle('active', i === active));
+        if (items[active]) {
+          owner.setAttribute('aria-activedescendant', items[active].id);
+          const item = items[active], top = item.offsetTop, bottom = top + item.offsetHeight;
+          if (top < menu.scrollTop) menu.scrollTop = top;
+          else if (bottom > menu.scrollTop + menu.clientHeight) menu.scrollTop = bottom - menu.clientHeight;
+        }
+      }
+      function position() {
+        const rect = owner.getBoundingClientRect(), gap = 5, edge = 8;
+        const below = innerHeight - rect.bottom - gap - edge, above = rect.top - gap - edge;
+        const up = below < Math.min(300, menu.scrollHeight) && above > below;
+        menu.style.width = Math.min(Math.max(rect.width, 180), innerWidth - edge * 2) + 'px';
+        menu.style.maxHeight = Math.max(40, Math.min(320, up ? above : below)) + 'px';
+        menu.style.left = Math.max(edge, Math.min(rect.left, innerWidth - menu.offsetWidth - edge)) + 'px';
+        menu.style.top = (up ? Math.max(edge, rect.top - menu.offsetHeight - gap) : rect.bottom + gap) + 'px';
+      }
+      function build() {
+        menu.replaceChildren();
+        items = [];
+        const label = owner.getAttribute('aria-label') || Array.from(owner.labels || []).map(l => l.textContent.trim()).join(' ') || 'Options';
+        menu.setAttribute('aria-label', label);
+        const addOption = option => {
+          if (option.hidden) return;
+          const item = document.createElement('div');
+          item.className = 'html-select-option';
+          item.id = 'htmlSelectOption' + option.index;
+          item.setAttribute('role', 'option');
+          item.setAttribute('aria-selected', String(option.selected));
+          item.setAttribute('aria-disabled', String(!enabled(option)));
+          item.textContent = option.label;
+          item.dataset.index = option.index;
+          items.push(item);
+          return item;
+        };
+        for (const child of owner.children) {
+          if (child.tagName === 'OPTGROUP' && !child.hidden) {
+            const group = document.createElement('div');
+            group.setAttribute('role', 'group');
+            group.setAttribute('aria-label', child.label);
+            const heading = document.createElement('div');
+            heading.className = 'html-select-group';
+            heading.setAttribute('aria-hidden', 'true');
+            heading.textContent = child.label;
+            group.appendChild(heading);
+            for (const option of child.children) { const item = addOption(option); if (item) group.appendChild(item); }
+            menu.appendChild(group);
+          } else if (child.tagName === 'OPTION') {
+            const item = addOption(child);
+            if (item) menu.appendChild(item);
+          }
+        }
+        position();
+        highlight(items.findIndex(item => Number(item.dataset.index) === owner.selectedIndex));
+      }
+      function open(select) {
+        close();
+        if (select.disabled || !select.options.length || select.size > 1) return;
+        owner = select;
+        search = ''; searchAt = 0;
+        owner.focus({ preventScroll: true });
+        owner.setAttribute('aria-expanded', 'true');
+        owner.setAttribute('aria-controls', menu.id);
+        menu.hidden = false;
+        backdrop.hidden = false;
+        build();
+        observer.observe(owner, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['label', 'value', 'selected', 'disabled', 'hidden'] });
+        // render() can remove the owner or hide a parent dialog while its menu is open.
+        observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'disabled'] });
+      }
+      function commit(index) {
+        const select = owner, item = items[index];
+        if (!select || !item || !enabled(select.options[Number(item.dataset.index)])) return;
+        const next = Number(item.dataset.index), changed = select.selectedIndex !== next;
+        close();
+        select.focus({ preventScroll: true });
+        if (changed) {
+          select.selectedIndex = next;
+          select.dispatchEvent(new Event('input', { bubbles: true }));
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      }
+      // Dismiss before control handlers can prevent the event or stop propagation.
+      window.addEventListener('pointerdown', e => {
+        if (owner && e.target !== owner && !menu.contains(e.target)) close();
+      }, true);
+      backdrop.addEventListener('click', close);
+      document.addEventListener('pointerdown', e => {
+        if (e.defaultPrevented || e.button !== 0) return;
+        if (menu.contains(e.target)) { e.preventDefault(); return; }
+        const select = selectAt(e.target);
+        if (select && !select.disabled && select.size <= 1) {
+          e.preventDefault();
+          if (owner === select) close(); else open(select);
+        } else close();
+      }, true);
+      // Prevent native pickers on mouse, touch-generated clicks and accessibility clicks.
+      document.addEventListener('mousedown', e => {
+        if (selectAt(e.target) && !e.defaultPrevented) e.preventDefault();
+      }, true);
+      document.addEventListener('click', e => {
+        const select = selectAt(e.target);
+        if (!select || e.defaultPrevented || select.size > 1) return;
+        e.preventDefault();
+        if (e.detail === 0) { if (owner === select) close(); else open(select); }
+      }, true);
+      menu.addEventListener('click', e => {
+        const item = e.target.closest('.html-select-option');
+        if (item) commit(items.indexOf(item));
+      });
+      menu.addEventListener('pointermove', e => {
+        const item = e.target.closest('.html-select-option');
+        if (item && item.getAttribute('aria-disabled') !== 'true') highlight(items.indexOf(item));
+      });
+      document.addEventListener('keydown', e => {
+        const select = selectAt(e.target);
+        if (!select || select.disabled || select.size > 1 || e.defaultPrevented || e.isComposing) return;
+        if (e.key === 'Tab') { close(); return; }
+        if (e.key === 'Escape') {
+          if (owner) { e.preventDefault(); e.stopImmediatePropagation(); close(); }
+          return;
+        }
+        const navigation = ['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageDown', 'PageUp'];
+        const typing = e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey;
+        if (!navigation.includes(e.key) && !['Enter', ' ', 'F4'].includes(e.key) && !typing) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (owner !== select) { open(select); if (!typing || e.key === ' ') return; }
+        else if (e.key === 'Enter' || (e.key === ' ' && !search) || e.key === 'F4') { commit(active); return; }
+        const available = items.map((item, i) => item.getAttribute('aria-disabled') === 'true' ? -1 : i).filter(i => i >= 0);
+        if (!available.length) return;
+        if (typing) {
+          const now = Date.now();
+          search = (now - searchAt < 700 ? search : '') + e.key.toLocaleLowerCase();
+          searchAt = now;
+          const repeated = [...search].every(c => c === search[0]), prefix = repeated ? search[0] : search;
+          const start = repeated ? active + 1 : Math.max(active, 0);
+          for (let n = 0; n < items.length; n++) {
+            const i = (start + n) % items.length;
+            if (available.includes(i) && items[i].textContent.toLocaleLowerCase().startsWith(prefix)) { highlight(i); break; }
+          }
+        } else {
+          search = '';
+          let i = available.indexOf(active);
+          if (e.key === 'Home') i = 0;
+          else if (e.key === 'End') i = available.length - 1;
+          else i += (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key) ? -1 : 1) * (e.key.startsWith('Page') ? 8 : 1);
+          highlight(available[Math.max(0, Math.min(available.length - 1, i))]);
+        }
+      }, true);
+      document.addEventListener('wheel', e => {
+        if (!owner) return;
+        // Scroll only the list, including at its boundaries; never the page or a parameter underneath.
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if (menu.contains(e.target)) menu.scrollTop += e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? menu.clientHeight : 1);
+      }, { capture: true, passive: false });
+      document.addEventListener('focusin', e => { if (owner && e.target !== owner && !menu.contains(e.target)) close(); });
+      document.addEventListener('scroll', e => { if (owner && !menu.contains(e.target)) close(); }, true);
+      window.addEventListener('resize', close);
+      window.addEventListener('blur', close);
+    })();
   </script>
 </body>
 </html>

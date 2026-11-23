@@ -40,6 +40,7 @@ run board-strip      mock.js fake-board.js test-board-strip.js
 run auto-backup      mock.js fake-board.js test-auto-backup.js
 run focus            mock.js test-focus.js
 run gate             mock.js test-gate.js
+run dropdown         mock.js test-dropdown.js
 page dialogs mock.js library.js check-dialogs.js
 for size in 1440,900 1000,517 760,447; do
   result="$(title dialogs "$size")"
