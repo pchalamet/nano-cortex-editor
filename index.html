@@ -1413,8 +1413,12 @@
     .conn-btn #status { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .conn-btn.connected { background: #0e1f12; border-color: #1d4d27; color: #c8f0cf; }
     .more { position: relative; }
+    .more-backdrop { position: fixed; inset: 0; z-index: 29; -webkit-app-region: no-drag; }
+    .more-backdrop[hidden] { display: none; }
     .more-menu { position: absolute; right: 0; top: 46px; z-index: 30; display: grid; gap: 4px; min-width: 270px; padding: 6px;
                  background: #121416; border: 1px solid #2e3236; border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.6); }
+    .more-menu { max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain;
+                 color-scheme: dark; scrollbar-width: thin; scrollbar-color: #555 #121416; }
     .more-menu[hidden] { display: none; }
     .more-menu button { display: flex; align-items: center; gap: 10px; text-align: left; border: 0; background: transparent; font-size: 13px; padding: 9px 12px; border-radius: 8px;
                         white-space: nowrap; }
@@ -2345,6 +2349,7 @@
       <button id="connectBtn" class="conn-btn" title="Connect to the Nano Cortex"><span id="dot" class="dot"></span><span id="status">Connect</span></button>
       <div class="more">
         <button id="moreBtn" class="icon-btn" title="More" aria-label="More"><span class="ico" style="--icon: var(--ico-more)"></span></button>
+        <div id="moreBackdrop" class="more-backdrop" aria-hidden="true" hidden></div>
         <div id="moreMenu" class="more-menu" hidden>
           <button id="exportBtn" title="Save the current preset as a file (to keep or to share)"><span class="ico" style="--icon: var(--ico-export)"></span>Export preset file…<span class="menu-key"></span></button>
           <button id="importBtn" title="Load a preset file into the current preset (or drop the file on the window)"><span class="ico" style="--icon: var(--ico-import)"></span>Import preset file…<span class="menu-key"></span></button>
@@ -13922,8 +13927,36 @@ function parseSelectedCaptureState(payload) {
     scheduleAutoConnect(800);   // Mac app: connect at start
     function toggleMoreMenu(open) {
       const menu = $('moreMenu');
+      const wasHidden = menu.hidden;
       menu.hidden = open === undefined ? !menu.hidden : !open;
+      $('moreBackdrop').hidden = menu.hidden;
+      $('moreBtn').setAttribute('aria-expanded', String(!menu.hidden));
+      if (!menu.hidden) {
+        menu.style.maxHeight = Math.max(40, innerHeight - menu.getBoundingClientRect().top - 8) + 'px';
+        if (wasHidden) menu.scrollTop = 0;
+      }
     }
+    // Capture outside presses before other controls handle them, including the draggable app title bar.
+    window.addEventListener('pointerdown', e => {
+      if (!$('moreMenu').hidden && !e.target.closest('#moreMenu, #moreBtn, #connectBtn')) toggleMoreMenu(false);
+    }, true);
+    $('moreBackdrop').addEventListener('click', () => toggleMoreMenu(false));
+    window.addEventListener('wheel', e => {
+      const menu = $('moreMenu');
+      if (menu.hidden) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (menu.contains(e.target)) menu.scrollTop += e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? menu.clientHeight : 1);
+    }, { capture: true, passive: false });
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !$('moreMenu').hidden) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        toggleMoreMenu(false);
+        $('moreBtn').focus({ preventScroll: true });
+      }
+    }, true);
+    window.addEventListener('resize', () => { if (!$('moreMenu').hidden) toggleMoreMenu(true); });
     $('moreBtn').addEventListener('click', e => { e.stopPropagation(); toggleMoreMenu(); });
     $('connectBtn').addEventListener('click', e => e.stopPropagation());
     $('moreMenu').addEventListener('click', e => { if (e.target.closest('button')) toggleMoreMenu(false); });
