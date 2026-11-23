@@ -45,7 +45,7 @@
       align-items: center;
       gap: 18px;
       padding: 0 24px;
-      border-bottom: 1px solid #171717;
+      border-bottom: none;
       background: rgba(0, 0, 0, 0.76);
       position: sticky;
       top: 0;
@@ -1522,10 +1522,25 @@
                     background: linear-gradient(180deg, rgba(20, 22, 24, .95), rgba(10, 11, 12, .95)); }
     /* Keep the overview in place while the controls below scroll; the toolbar may wrap. */
     @media (min-width: 601px) {
-      html:not([data-duo]) #signalChain { position: sticky; top: calc(var(--toolbar-height, 70px) + 18px); z-index: 5; margin-inline: -10px;
+      html:not([data-duo]):not(.view-pedals) main { padding-top: 0; }
+      html:not([data-duo]) #signalChain { position: sticky; top: var(--toolbar-height, 70px); z-index: 5; margin-inline: -10px;
         background: linear-gradient(180deg, rgba(20, 22, 24, .96), rgba(10, 11, 12, .94));
         backdrop-filter: blur(16px) saturate(1.1); -webkit-backdrop-filter: blur(16px) saturate(1.1);
         box-shadow: 0 16px 32px -8px rgba(0, 0, 0, .85), 0 3px 8px rgba(0, 0, 0, .5); }
+    }
+    @media (min-width: 601px) {
+      html:not([data-duo]) #signalChain {
+        --sc-collapse: 0; --sc-base-bottom: 4px;
+        --sc-top: calc(16px - 6px * var(--sc-collapse));
+        padding-top: var(--sc-top); padding-bottom: calc(var(--sc-base-bottom) + 6px * var(--sc-collapse));
+        /* Replace the lost height with margin so scrolling does not move the controls below. */
+        margin-bottom: calc(28.75px * var(--sc-collapse));
+      }
+      html.bars:not([data-duo]) #signalChain { --sc-base-bottom: 0px; }
+      html:not([data-duo]) #signalChain .sc-sub {
+        min-height: 0; height: calc(28.75px * (1 - var(--sc-collapse))); opacity: calc(1 - var(--sc-collapse));
+        transform: translateY(calc(-4px * var(--sc-collapse)));
+      }
     }
     .sc-node { position: relative; z-index: 1; display: grid; justify-items: center; gap: 6px; flex: 0 0 88px; cursor: pointer; user-select: none; }
     .sc-node.wide { flex: 0 1 170px; min-width: 128px; }
@@ -16763,6 +16778,9 @@ function parseSelectedCaptureState(payload) {
     pinnedLayoutObserver.observe(toolbar);
     updatePinnedLayout();
     window.addEventListener('resize', updatePinnedLayout);
+    const updateChainScroll = () => $('signalChain').style.setProperty('--sc-collapse', String(clamp(window.scrollY / 160, 0, 1)));
+    window.addEventListener('scroll', updateChainScroll, { passive: true });
+    updateChainScroll();
 
     $('heroConnect').addEventListener('click', () => $('connectBtn').click());
     setStatus('Disconnected');
