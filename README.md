@@ -173,6 +173,12 @@ cd mac-app
 ./build.sh --public   # release build without pedal pictures, plus a zip in ../release
 ```
 
+For development, run `npm start` (or `pnpm electron .`) from `mac-app`. This loads the repository’s
+`index.html` directly and automatically reloads the window when that file changes, without rebuilding.
+Reloading resets the editor session and reconnects to the Nano. Restart Electron after changing app shell files
+(such as `mac-app/main.js` or `mac-app/preload.js`). Packaged apps use the copy included by `build.sh`
+and do not watch for changes.
+
 The app is a small [Electron](https://www.electronjs.org) shell around `index.html`
 (Safari/WKWebView has no Web Bluetooth), plus three small helpers written in Swift that `build.sh` compiles – the
 level meter, the monitor and the spectrum, for what a page cannot do with the Nano's USB audio. So the

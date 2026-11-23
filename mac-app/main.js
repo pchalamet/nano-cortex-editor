@@ -1,5 +1,5 @@
 // Nano Cortex Editor - macOS app shell (Electron) around the web editor.
-// The editor itself is app/index.html (copied from ../index.html by build.sh).
+// Development uses ../index.html; packaged apps use app/index.html (copied by build.sh).
 const { app, BrowserWindow, ipcMain, Menu, session, shell, systemPreferences } = require('electron');
 const fs = require('fs');
 const path = require('path');
@@ -136,7 +136,26 @@ function createWindow() {
   });
 
   win.on('closed', () => { stopMeter(); stopMonitor(); stopSpectrum(); });
-  win.loadFile(path.join(__dirname, 'app', 'index.html'));
+  const editorPath = app.isPackaged
+    ? path.join(__dirname, 'app', 'index.html')
+    : path.join(__dirname, '..', 'index.html');
+  win.loadFile(editorPath);
+  if (!app.isPackaged) {
+    // Poll the source file so editors that save by replacing it are handled too.
+    let reloadTimer;
+    const onEditorChange = (current, previous) => {
+      if (!current.nlink || (current.mtimeMs === previous.mtimeMs && current.size === previous.size)) return;
+      clearTimeout(reloadTimer);
+      reloadTimer = setTimeout(() => {
+        if (!win.isDestroyed()) win.webContents.reload();
+      }, 200);
+    };
+    fs.watchFile(editorPath, { interval: 300, persistent: false }, onEditorChange);
+    win.on('closed', () => {
+      fs.unwatchFile(editorPath, onEditorChange);
+      clearTimeout(reloadTimer);
+    });
+  }
 }
 
 // The output meter listens to the Nano's USB audio, which is an audio input ("microphone") for macOS: macOS asks the
