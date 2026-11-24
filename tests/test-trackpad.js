@@ -28,7 +28,7 @@ setTimeout(() => {
     check('effect', fx, () => param.value);
     wheel(fx.querySelector('.param-name'), -20);
     ok('scrolling slider label leaves value unchanged', param.value === 5);
-    fx.querySelector('.knob').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 1, clientX: 20, clientY: 100 }));
+    fx.querySelector('.slider-handle').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, pointerId: 1, clientX: 20, clientY: 100 }));
     window.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: 80, clientY: 40 }));
     window.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: 80, clientY: 40 }));
     ok('click and drag still adjusts slider', param.value > 5);

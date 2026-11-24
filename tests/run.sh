@@ -44,6 +44,7 @@ run dropdown         mock.js test-dropdown.js
 run menu             mock.js test-menu.js
 run connection-modal mock.js test-connection-modal.js
 run trackpad         mock.js test-trackpad.js
+run disabled-controls mock.js test-disabled-controls.js
 run modal-scroll     mock.js test-modal-scroll.js
 run sticky-chain     mock.js test-sticky-chain.js
 page dialogs mock.js library.js check-dialogs.js
