@@ -1,5 +1,5 @@
 // Nano Cortex Editor - macOS app shell (Electron) around the web editor.
-// Development uses ../index.html; packaged apps use app/index.html (copied by build.sh).
+// Development uses ../index.html; packaged apps use app/index.html (copied by make build).
 const { app, BrowserWindow, ipcMain, Menu, session, shell, systemPreferences } = require('electron');
 const fs = require('fs');
 const path = require('path');

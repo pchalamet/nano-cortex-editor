@@ -165,26 +165,36 @@ No board? The controller also runs in the browser:
 
 ## Build the Mac app
 
-Requires [Node.js](https://nodejs.org) on an Apple Silicon Mac.
+Requires [Node.js](https://nodejs.org), [pnpm](https://pnpm.io), and an Apple Silicon Mac.
+The root pnpm workspace pins the package-manager version in `package.json` and dependencies in `pnpm-lock.yaml`.
+
+Run these commands from the repository root:
 
 ```bash
-cd mac-app
-./build.sh            # app for yourself, includes your pedal pictures from ../img if present
-./build.sh --public   # release build without pedal pictures, plus a zip in ../release
+make install         # install the locked workspace dependencies
+make build           # build the Mac app, including personal pictures from img/ if present
+make electron        # run development mode, reloading automatically when index.html changes
+make test            # run the headless Chrome tests (requires Google Chrome and Python 3)
+make release         # build without personal pictures and create a release zip
 ```
 
-For development, run `npm start` (or `pnpm electron .`) from `mac-app`. This loads the repository’s
-`index.html` directly and automatically reloads the window when that file changes, without rebuilding.
-Reloading resets the editor session and reconnects to the Nano. Restart Electron after changing app shell files
-(such as `mac-app/main.js` or `mac-app/preload.js`). Packaged apps use the copy included by `build.sh`
-and do not watch for changes.
+The app is built under `mac-app/dist/`. Use `make build NANO_DIST=dist/next` to build beside
+an app that is already running. `make build PUBLIC=1` omits personal pictures without creating a zip.
+`make build` and `make electron` install dependencies and compile the Swift audio helpers as needed.
+`make test CHROME="/path/to/chromium"` selects a different Chromium executable.
+
+For development, `make electron` loads the repository’s `index.html` directly and automatically reloads
+the window when that file changes. Reloading resets the editor session and reconnects to the Nano.
+Restart Electron after changing app shell files (such as `mac-app/main.js` or `mac-app/preload.js`).
+You can also run `pnpm start` from `mac-app` after installing dependencies and building the helpers.
+Packaged apps use the copy included by `make build` and do not watch for changes.
 
 The app is a small [Electron](https://www.electronjs.org) shell around `index.html`
-(Safari/WKWebView has no Web Bluetooth), plus three small helpers written in Swift that `build.sh` compiles – the
+(Safari/WKWebView has no Web Bluetooth), plus three small helpers written in Swift that `make build` compiles – the
 level meter, the monitor and the spectrum, for what a page cannot do with the Nano's USB audio. So the
 build also needs the Swift compiler of Xcode or its command line tools (`xcode-select --install`). It connects to the first Bluetooth device whose name contains
 "Nano" or "Cortex" – the Nano itself or the Nano Cortex Controller. The version in `mac-app/package.json` must match
-`EDITOR_VERSION` in `index.html` (shown next to the title); `build.sh` checks it.
+`EDITOR_VERSION` in `index.html` (shown next to the title); `make build` checks it.
 
 ## Output level and Auto level
 
