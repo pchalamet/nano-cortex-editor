@@ -53,7 +53,7 @@ setTimeout(() => {
     ok('disabled range ignores horizontal scroll', !wheel(range, -50).defaultPrevented && range.value === '10');
     const empty = document.createElement('div'); fixture.appendChild(empty);
     ok('horizontal scroll outside controls remains available', !wheel(empty, 50).defaultPrevented);
-    $('moreBtn').click();
+    $('connectBtn').click();
     const before = param.value;
     ok('open menu blocks control scrolling', wheel(fx.querySelector('.knob'), 50).defaultPrevented && param.value === before);
     toggleMoreMenu(false);

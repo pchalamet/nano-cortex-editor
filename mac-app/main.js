@@ -72,7 +72,7 @@ function createWindow() {
     title: 'Nano Cortex Editor',
     backgroundColor: '#000000',
     // No title bar: the window buttons sit in the editor's top bar (the page leaves room for them and lets the
-    // bar move the window), centred on its first row.
+    // branding area move the window), centred on its first row.
     titleBarStyle: 'hiddenInset',
     trafficLightPosition: { x: 20, y: 27 },
     webPreferences: {

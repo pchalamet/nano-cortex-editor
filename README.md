@@ -156,7 +156,7 @@ itself). The status shows *Connected via controller*, and editor and controller 
 controller, connect to the Nano directly as before.
 
 **Backup of the controller's settings** (controller firmware 1.13.0 or newer): while connected through the
-controller, the **…** menu has *Back up controller settings…* – everything the controller stores (banks, scenes,
+controller, the **Connected** button’s menu has *Back up controller settings…* – everything the controller stores (banks, scenes,
 second effects, set list, footswitch order) goes into one file – and *Restore controller settings…*, which writes
 such a file back. A restore replaces what the controller stores now; the controller restarts afterwards.
 

@@ -428,6 +428,8 @@
 
     /* Lock the page for any visible modal, including dynamically created and stacked dialogs.
        Overlays embedded in Duo's live stage are not modals. */
+    html:has(#connectHero:not([hidden])),
+    body:has(#connectHero:not([hidden])),
     html:has(body > :is(.ask-overlay, .lib-overlay, .tuner-overlay, .wheel-overlay):not([hidden])),
     body:has(> :is(.ask-overlay, .lib-overlay, .tuner-overlay, .wheel-overlay):not([hidden])) {
       overflow: hidden;
@@ -730,9 +732,8 @@
     html[data-duo] header.topbar .preset-field { flex: 1; min-width: 0; }
     html[data-duo] header.topbar .tools { display: flex; align-items: center; gap: 8px; flex: none; margin: 0; }
     html[data-duo] .conn-btn { padding: 0 12px; justify-content: center; }
-    html[data-duo] header.topbar .conn-btn.connected { display: none; }   /* connected, its menu is the "…" one: the room goes to the preset's name */
     html:is([data-duo="outer"], [data-duo="book"]) :is(#tunerBtn, #jamBtn) { display: none; }
-    html[data-duo="outer"] :is(#abBox, .conn-btn) { display: none; }
+    html[data-duo="outer"] #abBox { display: none; }
     html:is([data-duo="outer"], [data-duo="book"]) header.topbar :is(.icon-btn, .conn-btn) { width: 40px; min-width: 40px; height: 40px; padding: 0; }
     html:is([data-duo="outer"], [data-duo="book"]) header.topbar .preset-field select { padding-left: 10px; }
     html[data-duo] .conn-btn #status { display: none; }
@@ -1025,7 +1026,7 @@
     html[data-duo="half"] .duo-bands > :is(.switch-param, .stepped-param) > .param-name { display: none; }
     html[data-duo="half"] .duo-bands :is(.duo-seg, .switch-pill, .stepped-select) { width: 100%; max-width: none; }
 
-    /* ---- the Mac / browser window with sliders (html.bars, the default; the knobs stay as a choice in the "…" menu):
+    /* ---- the Mac / browser window with sliders (html.bars, the default; the knobs stay as a choice in the connection menu):
        the whole preset fits a 1440 x 900 window - a compact chain and cards, a block with nine or more controls takes
        two columns with its sliders in two columns ---- */
     html.bars main { gap: 12px; }
@@ -1441,8 +1442,8 @@
 
     /* monitor: the Nano's USB sound through another audio device (Mac app) */
     :root { --ico-monitor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><g fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M4 9.5h3l4.5-4v13L7 14.5H4z'/><path d='M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11'/></g></svg>"); }
-    #moreBtn { position: relative; }
-    #moreBtn.playing::after { content: ""; position: absolute; right: 5px; top: 5px; width: 7px; height: 7px; border-radius: 50%; background: #45F862;
+    #connectBtn { position: relative; }
+    #connectBtn.playing::after { content: ""; position: absolute; right: 5px; top: 5px; width: 7px; height: 7px; border-radius: 50%; background: #45F862;
                               box-shadow: 0 0 8px rgba(69, 248, 98, .7); }   /* the monitor plays while its dialog is closed */
     #monitorOverlay { z-index: 59; }   /* below the page's own question dialog */
     .monitor-panel { width: min(560px, calc(100vw - 32px)); gap: 14px; max-height: calc(100vh - 32px); overflow: auto; }
@@ -1671,7 +1672,8 @@
     /* start screen while not connected */
     main { position: relative; }
     main.offline > *:not(.connect-hero) { opacity: .2; filter: grayscale(1); pointer-events: none; user-select: none; }
-    .connect-hero { position: absolute; inset: 0; z-index: 5; display: grid; justify-items: center; align-content: start; padding: 110px 16px 0; }
+    .connect-hero { position: fixed; inset: 0; z-index: 100001; background: rgba(0, 0, 0, .6); display: grid; justify-items: center; align-content: start; padding: 110px 16px 0; }
+    .connect-hero, .connect-hero * { -webkit-app-region: no-drag; }
     .connect-hero[hidden] { display: none; }
     .hero-card { width: min(440px, 100%); text-align: center; padding: 30px 28px 26px; border-radius: 18px; background: rgba(18, 20, 22, .94);
                  border: 1px solid #2c3035; box-shadow: 0 24px 70px rgba(0, 0, 0, .6); backdrop-filter: blur(14px); }
@@ -1814,9 +1816,12 @@
     .brand-sub .unofficial, .brand-sub .editor-version { margin: 0; padding: 0; border: 0; font-size: inherit; letter-spacing: 0; color: inherit; vertical-align: baseline; }
     @media (max-width: 600px) { header.topbar { position: static; } }
 
-    /* Mac app: the window buttons sit in the top bar (no title bar); the bar moves the window */
-    .mac-app header.topbar { -webkit-app-region: drag; }
+    /* Mac app: only the branding area drags the window; toolbar controls stay in the client area. */
+    .mac-app header.topbar { -webkit-app-region: no-drag; }
+    .mac-app header.topbar .brand { -webkit-app-region: drag; user-select: none; }
+    .mac-app header.topbar :is(.preset-bar, .tools), .mac-app header.topbar :is(.preset-bar, .tools) * { -webkit-app-region: no-drag; }
     .mac-app header.topbar :is(button, select, input, .preset-field, .more-menu) { -webkit-app-region: no-drag; }
+    .mac-app header.topbar .more, .mac-app header.topbar .more * { -webkit-app-region: no-drag; }
     .mac-app:not(.fullscreen) .topbar .brand { margin-left: 68px; }
 
     /* loading line while the editor reads from the Nano */
@@ -2259,7 +2264,7 @@
       body.jam-open main { padding-bottom: 202px; }
       body.jam-open .toasts { bottom: 180px; }
     }
-    /* ---- Neural Capture V1 assistant (… > New Neural Capture) ---- */
+    /* ---- Neural Capture V1 assistant (Connected > New Neural Capture) ---- */
     .cw-panel { width: min(880px, calc(100vw - 32px)); height: auto; max-height: calc(100vh - 32px); overflow-y: auto; grid-template-rows: auto; gap: 16px; background: #121416; }
     .cw-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .cw-steps span { padding: 9px 0; border-radius: 20px; border: 1px solid #2c3036; text-align: center; font-size: 13px; font-weight: 600; color: #9da2a9; }
@@ -2371,9 +2376,8 @@
       <button id="midiBtn" class="icon-btn" title="MIDI controller and MIDI Learn" aria-label="MIDI"><span class="ico" style="--icon: var(--ico-midi)"></span></button>
       <button id="jamBtn" class="icon-btn" title="Jam tracks: a player for backing tracks, levelled to your presets" aria-label="Jam tracks"><span class="ico" style="--icon: var(--ico-jam)"></span></button>
       <span class="tool-sep"></span>
-      <button id="connectBtn" class="conn-btn" title="Connect to the Nano Cortex"><span id="dot" class="dot"></span><span id="status">Connect</span></button>
       <div class="more">
-        <button id="moreBtn" class="icon-btn" title="More" aria-label="More"><span class="ico" style="--icon: var(--ico-more)"></span></button>
+        <button id="connectBtn" class="conn-btn" title="Connect to the Nano Cortex" aria-controls="moreMenu" aria-expanded="false"><span id="dot" class="dot"></span><span id="status">Connect</span></button>
         <div id="moreBackdrop" class="more-backdrop" aria-hidden="true" hidden></div>
         <div id="moreMenu" class="more-menu" hidden>
           <button id="exportBtn" title="Save the current preset as a file (to keep or to share)"><span class="ico" style="--icon: var(--ico-export)"></span>Export preset file…<span class="menu-key"></span></button>
@@ -2408,7 +2412,7 @@
   </header>
 
   <main>
-    <div id="connectHero" class="connect-hero" hidden>
+    <div id="connectHero" class="connect-hero" role="dialog" aria-modal="true" aria-labelledby="heroTitle" tabindex="-1" hidden>
       <div class="hero-card">
         <div class="hero-icon"><span class="ico" style="--icon: var(--ico-bluetooth)"></span></div>
         <h2 id="heroTitle">Connect your Nano Cortex</h2>
@@ -3605,12 +3609,20 @@
       $('connectBtn').classList.toggle('connected', connected);
       $('connectBtn').title = connected ? text + ' - click for preset files, refresh and disconnect' : 'Connect to the Nano Cortex';
       // Not connected: the editor is dimmed behind a connect card (no made-up values); while connecting it shows the step.
-      $('connectHero').hidden = connected;
+      const hero = $('connectHero');
+      const restoreFocus = hero.contains(document.activeElement);
+      hero.hidden = connected;
       document.querySelector('main').classList.toggle('offline', !connected);
+      document.querySelectorAll('body > :not(main):not(script), main > :not(#connectHero)').forEach(el => { el.inert = !connected; });
+      $('connectBtn').setAttribute('aria-haspopup', connected ? 'true' : 'false');
       if (navigator.bluetooth) {
         $('heroConnect').textContent = text === 'Disconnected' ? 'Connect' : text;
         $('heroConnect').disabled = text !== 'Disconnected';
       }
+      if (!connected) {
+        toggleMoreMenu(false);
+        ($('heroConnect').disabled ? hero : $('heroConnect')).focus({ preventScroll: true });
+      } else if (restoreFocus) $('connectBtn').focus({ preventScroll: true });
     }
     function bytesFromHex(s) { return new Uint8Array(s.replaceAll(' ', '').match(/.{1,2}/g).map(h => parseInt(h, 16))); }
 
@@ -5299,7 +5311,7 @@ function parseSelectedCaptureState(payload) {
     }
 
     // Single-packet messages identified by their type. Returns true when handled.
-    // ---- Neural Capture V1 (… > New Neural Capture) ----
+    // ---- Neural Capture V1 (Connected > New Neural Capture) ----
     // Guided as Cortex Cloud 2.8.3 does it (decoded 2026-11-14): 73 puts the Nano into capture mode, 26 with context 1
     // sets CAPTURE IN / OUTPUT LEVEL, 43 a cab to listen through, 39 starts it, 40 / 41 / 93 report it, 42 compares,
     // 13 saves it into My Neural Captures (80 then puts it into a slot with the id from 14), 27 Exit goes back one
@@ -10878,7 +10890,7 @@ function parseSelectedCaptureState(payload) {
       const full = shareFormUrl(data, true);
       window.open(full.length <= SHARE_URL_MAX ? full : shareFormUrl(data, false), '_blank', 'noopener');
       log('Share: form opened for "' + data.name + '"' + (copied ? ', preset on the clipboard' : ''));
-      if (!copied) toast('The preset could not be put on the clipboard – export it (… → Export) and paste the file’s content into the form.', 'info', 9000);
+      if (!copied) toast('The preset could not be put on the clipboard – export it (Connected → Export) and paste the file’s content into the form.', 'info', 9000);
     }
     $('shareOk').addEventListener('click', confirmShare);
     $('shareCancel').addEventListener('click', () => { $('shareOverlay').hidden = true; });
@@ -13934,14 +13946,20 @@ function parseSelectedCaptureState(payload) {
       }
     }
 
-    $('connectBtn').addEventListener('click', () => { if (state.connected) toggleMoreMenu(); else { autoLink.wanted = true; autoLink.tries = 0; connectAll(); } });
+    $('connectBtn').addEventListener('click', e => {
+      e.stopPropagation();
+      if (e.detail > 1) return;   // a double-click opens the menu once
+      if (state.connected) toggleMoreMenu();
+      else { autoLink.wanted = true; autoLink.tries = 0; connectAll(); }
+    });
+    $('connectBtn').addEventListener('dblclick', e => { e.preventDefault(); e.stopPropagation(); });
     scheduleAutoConnect(800);   // Mac app: connect at start
     function toggleMoreMenu(open) {
       const menu = $('moreMenu');
       const wasHidden = menu.hidden;
       menu.hidden = open === undefined ? !menu.hidden : !open;
       $('moreBackdrop').hidden = menu.hidden;
-      $('moreBtn').setAttribute('aria-expanded', String(!menu.hidden));
+      $('connectBtn').setAttribute('aria-expanded', String(!menu.hidden));
       if (!menu.hidden) {
         menu.style.maxHeight = Math.max(40, innerHeight - menu.getBoundingClientRect().top - 8) + 'px';
         if (wasHidden) menu.scrollTop = 0;
@@ -13949,7 +13967,7 @@ function parseSelectedCaptureState(payload) {
     }
     // Capture outside presses before other controls handle them, including the draggable app title bar.
     window.addEventListener('pointerdown', e => {
-      if (!$('moreMenu').hidden && !e.target.closest('#moreMenu, #moreBtn, #connectBtn')) toggleMoreMenu(false);
+      if (!$('moreMenu').hidden && !e.target.closest('#moreMenu, #connectBtn')) toggleMoreMenu(false);
     }, true);
     $('moreBackdrop').addEventListener('click', () => toggleMoreMenu(false));
     window.addEventListener('wheel', e => {
@@ -13964,12 +13982,10 @@ function parseSelectedCaptureState(payload) {
         e.preventDefault();
         e.stopImmediatePropagation();
         toggleMoreMenu(false);
-        $('moreBtn').focus({ preventScroll: true });
+        $('connectBtn').focus({ preventScroll: true });
       }
     }, true);
     window.addEventListener('resize', () => { if (!$('moreMenu').hidden) toggleMoreMenu(true); });
-    $('moreBtn').addEventListener('click', e => { e.stopPropagation(); toggleMoreMenu(); });
-    $('connectBtn').addEventListener('click', e => e.stopPropagation());
     $('moreMenu').addEventListener('click', e => { if (e.target.closest('button')) toggleMoreMenu(false); });
     document.addEventListener('click', e => { if (!$('moreMenu').hidden && !e.target.closest('.more')) toggleMoreMenu(false); });
     $('refreshBtn').addEventListener('click', refreshLists);
@@ -15350,7 +15366,7 @@ function parseSelectedCaptureState(payload) {
     $('keysOverlay').addEventListener('click', e => { if (e.target === $('keysOverlay')) closeKeys(); });
 
     document.addEventListener('keydown', e => {
-      if (e.defaultPrevented || e.isComposing) return;
+      if (e.defaultPrevented || e.isComposing || !$('connectHero').hidden) return;
       if (e.key === 'Escape' && !$('keysOverlay').hidden) { closeKeys(); return; }
       const typing = e.target.closest && e.target.closest('input, textarea, select, [contenteditable]');
       const dialogOpen = state.midi.learn || [...document.querySelectorAll('.ask-overlay, .lib-overlay, .tuner-overlay')].some(el => !el.hidden);
@@ -15455,7 +15471,7 @@ function parseSelectedCaptureState(payload) {
       }
 
       function render() {
-        $('moreBtn').classList.toggle('playing', monitor.on && overlay.hidden);
+        $('connectBtn').classList.toggle('playing', monitor.on && overlay.hidden);
         if (overlay.hidden) return;
         const input = inputNow(), busy = monitor.starting;
         const fill = (select, list, chosen, none) => {
@@ -16784,6 +16800,10 @@ function parseSelectedCaptureState(payload) {
     updateChainScroll();
 
     $('heroConnect').addEventListener('click', () => $('connectBtn').click());
+    $('connectHero').addEventListener('keydown', e => {
+      e.stopPropagation();   // editor shortcuts stay inactive behind the connection dialog
+      if (e.key === 'Tab') { e.preventDefault(); ($('heroConnect').disabled ? $('connectHero') : $('heroConnect')).focus(); }
+    });
     setStatus('Disconnected');
 
     render();
@@ -16811,7 +16831,7 @@ function parseSelectedCaptureState(payload) {
       const selectAt = target => target instanceof Element ? target.closest('select:not([multiple])') : null;
       const observer = new MutationObserver(records => {
         if (!owner) return;
-        if (!owner.isConnected || owner.disabled || !owner.getClientRects().length || owner.closest('[hidden]')) close();
+        if (!owner.isConnected || owner.disabled || !owner.getClientRects().length || owner.closest('[hidden], [inert]')) close();
         else if (records.some(record => owner.contains(record.target))) build();
       });
       function close() {
@@ -16893,9 +16913,9 @@ function parseSelectedCaptureState(payload) {
         menu.hidden = false;
         backdrop.hidden = false;
         build();
-        observer.observe(owner, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['label', 'value', 'selected', 'disabled', 'hidden'] });
+        observer.observe(owner, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['label', 'value', 'selected', 'disabled', 'hidden', 'inert'] });
         // render() can remove the owner or hide a parent dialog while its menu is open.
-        observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'disabled'] });
+        observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden', 'disabled', 'inert'] });
       }
       function commit(index) {
         const select = owner, item = items[index];

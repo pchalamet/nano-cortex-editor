@@ -1,7 +1,7 @@
 <script>
 setTimeout(() => {
   const out = [], ok = (name, condition) => out.push((condition ? 'PASS ' : 'FAIL ') + name);
-  const menu = $('moreMenu'), backdrop = $('moreBackdrop'), button = $('moreBtn');
+  const menu = $('moreMenu'), backdrop = $('moreBackdrop'), button = $('connectBtn');
   const wheel = (target, deltaY, deltaMode = 0) => {
     const event = new WheelEvent('wheel', { deltaY, deltaMode, bubbles: true, cancelable: true });
     target.dispatchEvent(event);
@@ -9,8 +9,19 @@ setTimeout(() => {
   };
   let fixture;
   try {
+    ok('redundant More button is removed', !document.getElementById('moreBtn'));
+    const wasMacApp = document.documentElement.classList.contains('mac-app');
+    document.documentElement.classList.add('mac-app');
+    ok('toolbar itself is not a native drag region', getComputedStyle(document.querySelector('header.topbar')).getPropertyValue('-webkit-app-region') === 'no-drag');
+    ok('branding retains window dragging', getComputedStyle(document.querySelector('.topbar .brand')).getPropertyValue('-webkit-app-region') === 'drag');
+    ok('connection button and contents are outside draggable title bar', [button, ...button.children].every(el => getComputedStyle(el).getPropertyValue('-webkit-app-region') === 'no-drag'));
+    if (!wasMacApp) document.documentElement.classList.remove('mac-app');
     button.click();
-    ok('more button opens menu and dismissal surface', !menu.hidden && !backdrop.hidden && button.getAttribute('aria-expanded') === 'true');
+    button.dispatchEvent(new MouseEvent('click', { detail: 2, bubbles: true, cancelable: true }));
+    const doubleClick = new MouseEvent('dblclick', { detail: 2, bubbles: true, cancelable: true });
+    button.dispatchEvent(doubleClick);
+    ok('double click is consumed without toggling menu again', doubleClick.defaultPrevented && !menu.hidden);
+    ok('Connected button opens menu and dismissal surface', !menu.hidden && !backdrop.hidden && button.getAttribute('aria-expanded') === 'true');
     ok('menu fits viewport', menu.getBoundingClientRect().bottom <= innerHeight - 7);
     ok('outside surface covers title bar', getComputedStyle(backdrop).getPropertyValue('-webkit-app-region') === 'no-drag');
     const pageScroll = scrollY;
